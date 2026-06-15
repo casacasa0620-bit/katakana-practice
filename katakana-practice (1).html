@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>カタカナ 연습</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0f1117;
+    color: #f0f0f0;
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  header h1 {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+
+  header p {
+    font-size: 0.9rem;
+    color: #888;
+    letter-spacing: 0.05em;
+  }
+
+  /* Category tabs */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+
+  .tab {
+    background: #1c1f2b;
+    border: 1px solid #2e3245;
+    color: #aaa;
+    padding: 7px 18px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  .tab:hover { border-color: #5b8cff; color: #fff; }
+  .tab.active {
+    background: #5b8cff;
+    border-color: #5b8cff;
+    color: #fff;
+    font-weight: 500;
+  }
+
+  /* Cards grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px;
+    max-width: 800px;
+    margin: 0 auto 40px;
+  }
+
+  .card {
+    background: #1c1f2b;
+    border: 1px solid #2e3245;
+    border-radius: 14px;
+    padding: 20px 12px 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: #5b8cff;
+    box-shadow: 0 6px 24px rgba(91,140,255,0.15);
+  }
+
+  .card.playing {
+    border-color: #7fd8a0;
+    box-shadow: 0 0 0 2px rgba(127,216,160,0.3);
+  }
+
+  .card .katakana {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .card .romaji {
+    font-size: 0.72rem;
+    color: #5b8cff;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .card .divider {
+    width: 28px;
+    height: 1px;
+    background: #2e3245;
+    margin: 0 auto 8px;
+  }
+
+  .card .korean {
+    font-size: 0.8rem;
+    color: #bbb;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  /* Sound wave indicator */
+  .card .sound-icon {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 0.7rem;
+    color: #444;
+    transition: color 0.2s;
+  }
+  .card.playing .sound-icon { color: #7fd8a0; }
+
+  /* Repeat controls */
+  .controls {
+    max-width: 800px;
+    margin: 0 auto 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #1c1f2b;
+    border: 1px solid #2e3245;
+    border-radius: 14px;
+    padding: 14px 20px;
+  }
+
+  .controls label {
+    font-size: 0.82rem;
+    color: #888;
+    white-space: nowrap;
+  }
+
+  .repeat-btns {
+    display: flex;
+    gap: 6px;
+  }
+
+  .repeat-btn {
+    background: #0f1117;
+    border: 1px solid #2e3245;
+    color: #aaa;
+    padding: 5px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .repeat-btn:hover { border-color: #5b8cff; color: #fff; }
+  .repeat-btn.active { background: #5b8cff; border-color: #5b8cff; color: #fff; }
+
+  .speed-btns { display: flex; gap: 6px; margin-left: auto; }
+
+  /* Auto play section */
+  .autoplay-bar {
+    max-width: 800px;
+    margin: 0 auto 32px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-play-all {
+    background: linear-gradient(135deg, #5b8cff, #7fd8a0);
+    border: none;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: opacity 0.2s;
+  }
+  .btn-play-all:hover { opacity: 0.88; }
+
+  .btn-stop {
+    background: #1c1f2b;
+    border: 1px solid #444;
+    color: #aaa;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.2s;
+  }
+  .btn-stop:hover { border-color: #ff6b6b; color: #ff6b6b; }
+
+  .now-playing {
+    font-size: 0.8rem;
+    color: #7fd8a0;
+    margin-left: 8px;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #444;
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>カタカナ 연습</h1>
+  <p>카드를 클릭하면 발음을 들을 수 있어요 · 여러 번 반복 가능</p>
+</header>
+
+<!-- Repeat & Speed controls -->
+<div class="controls">
+  <label>반복 횟수</label>
+  <div class="repeat-btns">
+    <button class="repeat-btn active" data-repeat="1">1회</button>
+    <button class="repeat-btn" data-repeat="3">3회</button>
+    <button class="repeat-btn" data-repeat="5">5회</button>
+  </div>
+  <div class="speed-btns">
+    <label>속도</label>
+    <button class="repeat-btn active" data-rate="0.8">느리게</button>
+    <button class="repeat-btn" data-rate="1.0">보통</button>
+  </div>
+</div>
+
+<!-- Auto-play bar -->
+<div class="autoplay-bar">
+  <button class="btn-play-all" id="btnPlayAll">▶ 전체 자동 재생</button>
+  <button class="btn-stop" id="btnStop">■ 정지</button>
+  <span class="now-playing" id="nowPlaying"></span>
+</div>
+
+<!-- Category tabs -->
+<div class="tabs" id="tabs"></div>
+
+<!-- Word cards -->
+<div class="grid" id="grid"></div>
+
+<footer>카드를 클릭하거나 전체 자동 재생으로 반복 학습하세요.</footer>
+
+<script>
+const categories = {
+  "음식 🍜": [
+    { k: "コーヒー", r: "kōhī", ko: "커피" },
+    { k: "ケーキ", r: "kēki", ko: "케이크" },
+    { k: "アイスクリーム", r: "aisukurīmu", ko: "아이스크림" },
+    { k: "ジュース", r: "jūsu", ko: "주스" },
+    { k: "ピザ", r: "piza", ko: "피자" },
+    { k: "パン", r: "pan", ko: "빵" },
+    { k: "チョコレート", r: "chokoreeto", ko: "초콜릿" },
+    { k: "ラーメン", r: "rāmen", ko: "라면" },
+    { k: "サラダ", r: "sarada", ko: "샐러드" },
+    { k: "バター", r: "batā", ko: "버터" },
+    { k: "ヨーグルト", r: "yōguruto", ko: "요구르트" },
+    { k: "スープ", r: "sūpu", ko: "수프" },
+  ],
+  "생활 🏠": [
+    { k: "テレビ", r: "terebi", ko: "텔레비전" },
+    { k: "コンピューター", r: "konpyūtā", ko: "컴퓨터" },
+    { k: "スマホ", r: "sumaho", ko: "스마트폰" },
+    { k: "カメラ", r: "kamera", ko: "카메라" },
+    { k: "エアコン", r: "eakon", ko: "에어컨" },
+    { k: "ソファ", r: "sofa", ko: "소파" },
+    { k: "タオル", r: "taoru", ko: "수건" },
+    { k: "シャンプー", r: "shanpū", ko: "샴푸" },
+    { k: "ティッシュ", r: "tisshu", ko: "화장지" },
+    { k: "バッグ", r: "baggu", ko: "가방" },
+    { k: "ズボン", r: "zubon", ko: "바지" },
+    { k: "ジャケット", r: "jaketto", ko: "재킷" },
+  ],
+  "장소 🏙️": [
+    { k: "スーパー", r: "sūpā", ko: "슈퍼마켓" },
+    { k: "レストラン", r: "resutoran", ko: "레스토랑" },
+    { k: "ホテル", r: "hoteru", ko: "호텔" },
+    { k: "コンビニ", r: "konbini", ko: "편의점" },
+    { k: "デパート", r: "depāto", ko: "백화점" },
+    { k: "カフェ", r: "kafe", ko: "카페" },
+    { k: "ジム", r: "jimu", ko: "헬스장" },
+    { k: "アパート", r: "apāto", ko: "아파트" },
+    { k: "マンション", r: "manshon", ko: "맨션·아파트" },
+  ],
+  "스포츠 ⚽": [
+    { k: "サッカー", r: "sakkā", ko: "축구" },
+    { k: "テニス", r: "tenisu", ko: "테니스" },
+    { k: "バスケット", r: "basuketto", ko: "농구" },
+    { k: "バレーボール", r: "barēbōru", ko: "배구" },
+    { k: "ゴルフ", r: "gorufu", ko: "골프" },
+    { k: "スキー", r: "sukī", ko: "스키" },
+    { k: "マラソン", r: "marason", ko: "마라톤" },
+    { k: "ヨガ", r: "yoga", ko: "요가" },
+  ],
+  "감정·상태 💬": [
+    { k: "ストレス", r: "sutoresu", ko: "스트레스" },
+    { k: "ショック", r: "shokku", ko: "충격" },
+    { k: "リラックス", r: "rirakkusu", ko: "릴랙스·휴식" },
+    { k: "ロマンチック", r: "romanchikku", ko: "로맨틱" },
+    { k: "ユニーク", r: "yunīku", ko: "유니크·독특한" },
+    { k: "フレッシュ", r: "fureshu", ko: "신선한" },
+    { k: "クール", r: "kūru", ko: "멋있는" },
+  ],
+};
+
+let repeatCount = 1;
+let speechRate = 0.8;
+let currentCategory = Object.keys(categories)[0];
+
+// ── Chrome-safe speech engine ──────────────────────────────────────
+// Chrome's onend fires unreliably for sequences. Instead we poll
+// speechSynthesis.speaking and drive the queue ourselves.
+let pollTimer = null;
+
+function stopPoll() {
+  clearInterval(pollTimer);
+  pollTimer = null;
+}
+
+// Speak one utterance; resolve promise when done (polling-based).
+function sayOne(text) {
+  return new Promise(resolve => {
+    speechSynthesis.cancel();           // clear queue first
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang  = "ja-JP";
+    utter.rate  = speechRate;
+
+    // Fallback: if onend fires, resolve immediately
+    utter.onend   = () => { stopPoll(); resolve(); };
+    utter.onerror = () => { stopPoll(); resolve(); };
+
+    speechSynthesis.speak(utter);
+
+    // Chrome sometimes never fires onend — poll until not speaking
+    let waited = 0;
+    pollTimer = setInterval(() => {
+      waited += 100;
+      // Resume if Chrome paused it
+      if (speechSynthesis.paused) speechSynthesis.resume();
+      // Done when speaking stops (give 200 ms grace)
+      if (!speechSynthesis.speaking && waited > 200) {
+        stopPoll();
+        resolve();
+      }
+      // Hard timeout: 8 s max per word
+      if (waited > 8000) { stopPoll(); resolve(); }
+    }, 100);
+  });
+}
+
+// Tabs
+const tabsEl = document.getElementById("tabs");
+Object.keys(categories).forEach(cat => {
+  const btn = document.createElement("button");
+  btn.className = "tab" + (cat === currentCategory ? " active" : "");
+  btn.textContent = cat;
+  btn.onclick = () => {
+    stopAll();
+    currentCategory = cat;
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    btn.classList.add("active");
+    renderGrid();
+  };
+  tabsEl.appendChild(btn);
+});
+
+// Render grid
+function renderGrid() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  categories[currentCategory].forEach((word, i) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.dataset.index = i;
+    card.innerHTML = `
+      <span class="sound-icon">♪</span>
+      <div class="katakana">${word.k}</div>
+      <div class="romaji">${word.r}</div>
+      <div class="divider"></div>
+      <div class="korean">${word.ko}</div>
+    `;
+    card.onclick = () => speakWord(word, card);
+    grid.appendChild(card);
+  });
+}
+
+// ── High-level helpers ─────────────────────────────────────────────
+let autoPlaying = false;
+
+function setNowPlaying(word, rep, total) {
+  const npEl = document.getElementById("nowPlaying");
+  npEl.textContent = `🔊 ${word.k} (${word.ko})` + (total > 1 ? ` · ${rep}/${total}` : "");
+}
+
+function clearUI() {
+  document.querySelectorAll(".card").forEach(c => c.classList.remove("playing"));
+  document.getElementById("nowPlaying").textContent = "";
+}
+
+function stopAll() {
+  autoPlaying = false;
+  stopPoll();
+  speechSynthesis.cancel();
+  clearUI();
+}
+
+// Speak one word N times (async, checks autoPlaying flag)
+async function speakWordAsync(word, card, n) {
+  if (card) {
+    document.querySelectorAll(".card").forEach(c => c.classList.remove("playing"));
+    card.classList.add("playing");
+  }
+  for (let i = 1; i <= n; i++) {
+    if (!autoPlaying && n > 1) break;   // stopped mid-repeat during autoplay
+    setNowPlaying(word, i, n);
+    await sayOne(word.k);
+    if (i < n) await delay(350);
+  }
+  if (card) card.classList.remove("playing");
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Card click
+function speakWord(word, card) {
+  autoPlaying = false;
+  stopPoll();
+  speechSynthesis.cancel();
+  clearUI();
+  // Allow cancel to settle before speaking
+  setTimeout(async () => {
+    autoPlaying = true;          // reuse flag to allow repeat loop
+    await speakWordAsync(word, card, repeatCount);
+    autoPlaying = false;
+    document.getElementById("nowPlaying").textContent = "";
+  }, 100);
+}
+
+// ── Auto-play all ─────────────────────────────────────────────────
+document.getElementById("btnPlayAll").onclick = async () => {
+  stopAll();
+  await delay(150);   // let cancel settle
+
+  autoPlaying = true;
+  const words = categories[currentCategory];
+  const cards = document.querySelectorAll(".card");
+
+  for (let i = 0; i < words.length; i++) {
+    if (!autoPlaying) break;
+    await speakWordAsync(words[i], cards[i], repeatCount);
+    if (!autoPlaying) break;
+    await delay(500);
+  }
+
+  if (autoPlaying) {
+    document.getElementById("nowPlaying").textContent = "✅ 완료!";
+  }
+  autoPlaying = false;
+};
+
+document.getElementById("btnStop").onclick = stopAll;
+
+// Repeat buttons
+document.querySelectorAll(".repeat-btn[data-repeat]").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".repeat-btn[data-repeat]").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    repeatCount = parseInt(btn.dataset.repeat);
+  };
+});
+
+// Speed buttons
+document.querySelectorAll(".repeat-btn[data-rate]").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".repeat-btn[data-rate]").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    speechRate = parseFloat(btn.dataset.rate);
+  };
+});
+
+renderGrid();
+</script>
+</body>
+</html>
