@@ -1,3 +1,8 @@
+아래 코드를 복사해서 붙여넣으세요!
+
+코드 칸을 클릭하고 **Ctrl+A** (전체선택) → **Ctrl+V** (붙여넣기) 하면 돼요.파일 이름 칸에 `index.html` 입력하시고, 아래 코드 칸에 **전체 선택(Ctrl+A) 후 삭제**하고 아래 내용을 **복사(Ctrl+C) → 붙여넣기(Ctrl+V)** 해주세요!
+
+```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -37,7 +42,6 @@
     letter-spacing: 0.05em;
   }
 
-  /* Category tabs */
   .tabs {
     display: flex;
     gap: 8px;
@@ -66,7 +70,6 @@
     font-weight: 500;
   }
 
-  /* Cards grid */
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -131,7 +134,6 @@
     line-height: 1.4;
   }
 
-  /* Sound wave indicator */
   .card .sound-icon {
     position: absolute;
     top: 8px;
@@ -142,7 +144,6 @@
   }
   .card.playing .sound-icon { color: #7fd8a0; }
 
-  /* Repeat controls */
   .controls {
     max-width: 800px;
     margin: 0 auto 24px;
@@ -161,10 +162,7 @@
     white-space: nowrap;
   }
 
-  .repeat-btns {
-    display: flex;
-    gap: 6px;
-  }
+  .repeat-btns { display: flex; gap: 6px; }
 
   .repeat-btn {
     background: #0f1117;
@@ -181,7 +179,6 @@
 
   .speed-btns { display: flex; gap: 6px; margin-left: auto; }
 
-  /* Auto play section */
   .autoplay-bar {
     max-width: 800px;
     margin: 0 auto 32px;
@@ -239,7 +236,6 @@
   <p>카드를 클릭하면 발음을 들을 수 있어요 · 여러 번 반복 가능</p>
 </header>
 
-<!-- Repeat & Speed controls -->
 <div class="controls">
   <label>반복 횟수</label>
   <div class="repeat-btns">
@@ -254,17 +250,13 @@
   </div>
 </div>
 
-<!-- Auto-play bar -->
 <div class="autoplay-bar">
   <button class="btn-play-all" id="btnPlayAll">▶ 전체 자동 재생</button>
   <button class="btn-stop" id="btnStop">■ 정지</button>
   <span class="now-playing" id="nowPlaying"></span>
 </div>
 
-<!-- Category tabs -->
 <div class="tabs" id="tabs"></div>
-
-<!-- Word cards -->
 <div class="grid" id="grid"></div>
 
 <footer>카드를 클릭하거나 전체 자동 재생으로 반복 학습하세요.</footer>
@@ -334,10 +326,6 @@ const categories = {
 let repeatCount = 1;
 let speechRate = 0.8;
 let currentCategory = Object.keys(categories)[0];
-
-// ── Chrome-safe speech engine ──────────────────────────────────────
-// Chrome's onend fires unreliably for sequences. Instead we poll
-// speechSynthesis.speaking and drive the queue ourselves.
 let pollTimer = null;
 
 function stopPoll() {
@@ -345,38 +333,25 @@ function stopPoll() {
   pollTimer = null;
 }
 
-// Speak one utterance; resolve promise when done (polling-based).
 function sayOne(text) {
   return new Promise(resolve => {
-    speechSynthesis.cancel();           // clear queue first
+    speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang  = "ja-JP";
     utter.rate  = speechRate;
-
-    // Fallback: if onend fires, resolve immediately
     utter.onend   = () => { stopPoll(); resolve(); };
     utter.onerror = () => { stopPoll(); resolve(); };
-
     speechSynthesis.speak(utter);
-
-    // Chrome sometimes never fires onend — poll until not speaking
     let waited = 0;
     pollTimer = setInterval(() => {
       waited += 100;
-      // Resume if Chrome paused it
       if (speechSynthesis.paused) speechSynthesis.resume();
-      // Done when speaking stops (give 200 ms grace)
-      if (!speechSynthesis.speaking && waited > 200) {
-        stopPoll();
-        resolve();
-      }
-      // Hard timeout: 8 s max per word
+      if (!speechSynthesis.speaking && waited > 200) { stopPoll(); resolve(); }
       if (waited > 8000) { stopPoll(); resolve(); }
     }, 100);
   });
 }
 
-// Tabs
 const tabsEl = document.getElementById("tabs");
 Object.keys(categories).forEach(cat => {
   const btn = document.createElement("button");
@@ -392,7 +367,6 @@ Object.keys(categories).forEach(cat => {
   tabsEl.appendChild(btn);
 });
 
-// Render grid
 function renderGrid() {
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
@@ -412,12 +386,11 @@ function renderGrid() {
   });
 }
 
-// ── High-level helpers ─────────────────────────────────────────────
 let autoPlaying = false;
 
 function setNowPlaying(word, rep, total) {
-  const npEl = document.getElementById("nowPlaying");
-  npEl.textContent = `🔊 ${word.k} (${word.ko})` + (total > 1 ? ` · ${rep}/${total}` : "");
+  document.getElementById("nowPlaying").textContent =
+    `🔊 ${word.k} (${word.ko})` + (total > 1 ? ` · ${rep}/${total}` : "");
 }
 
 function clearUI() {
@@ -432,14 +405,13 @@ function stopAll() {
   clearUI();
 }
 
-// Speak one word N times (async, checks autoPlaying flag)
 async function speakWordAsync(word, card, n) {
   if (card) {
     document.querySelectorAll(".card").forEach(c => c.classList.remove("playing"));
     card.classList.add("playing");
   }
   for (let i = 1; i <= n; i++) {
-    if (!autoPlaying && n > 1) break;   // stopped mid-repeat during autoplay
+    if (!autoPlaying && n > 1) break;
     setNowPlaying(word, i, n);
     await sayOne(word.k);
     if (i < n) await delay(350);
@@ -449,46 +421,37 @@ async function speakWordAsync(word, card, n) {
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// Card click
 function speakWord(word, card) {
   autoPlaying = false;
   stopPoll();
   speechSynthesis.cancel();
   clearUI();
-  // Allow cancel to settle before speaking
   setTimeout(async () => {
-    autoPlaying = true;          // reuse flag to allow repeat loop
+    autoPlaying = true;
     await speakWordAsync(word, card, repeatCount);
     autoPlaying = false;
     document.getElementById("nowPlaying").textContent = "";
   }, 100);
 }
 
-// ── Auto-play all ─────────────────────────────────────────────────
 document.getElementById("btnPlayAll").onclick = async () => {
   stopAll();
-  await delay(150);   // let cancel settle
-
+  await delay(150);
   autoPlaying = true;
   const words = categories[currentCategory];
   const cards = document.querySelectorAll(".card");
-
   for (let i = 0; i < words.length; i++) {
     if (!autoPlaying) break;
     await speakWordAsync(words[i], cards[i], repeatCount);
     if (!autoPlaying) break;
     await delay(500);
   }
-
-  if (autoPlaying) {
-    document.getElementById("nowPlaying").textContent = "✅ 완료!";
-  }
+  if (autoPlaying) document.getElementById("nowPlaying").textContent = "✅ 완료!";
   autoPlaying = false;
 };
 
 document.getElementById("btnStop").onclick = stopAll;
 
-// Repeat buttons
 document.querySelectorAll(".repeat-btn[data-repeat]").forEach(btn => {
   btn.onclick = () => {
     document.querySelectorAll(".repeat-btn[data-repeat]").forEach(b => b.classList.remove("active"));
@@ -497,7 +460,6 @@ document.querySelectorAll(".repeat-btn[data-repeat]").forEach(btn => {
   };
 });
 
-// Speed buttons
 document.querySelectorAll(".repeat-btn[data-rate]").forEach(btn => {
   btn.onclick = () => {
     document.querySelectorAll(".repeat-btn[data-rate]").forEach(b => b.classList.remove("active"));
